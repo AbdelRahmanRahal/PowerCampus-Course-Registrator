@@ -1,1 +1,2 @@
+pyside6==6.5.2
 selenium==4.12.0
