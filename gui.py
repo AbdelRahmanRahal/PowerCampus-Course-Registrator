@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 from selenium.common.exceptions import ElementClickInterceptedException, NoSuchDriverException
 
 from automation import PowerCampusAutomation
+from exceptions import *
 
 
 def CURRENT_TIME():
@@ -25,7 +26,7 @@ def CURRENT_TIME():
 
 
 class AutomationThread(QThread):
-	log_signal = Signal(str)
+	log_signal: Signal = Signal(str)
 
 
 	def __init__(self, driver_path, username, password):
@@ -77,11 +78,11 @@ class AutomationThread(QThread):
 			)
 
 			self.log_signal.emit(
-				f"{CURRENT_TIME()} ⚙️ Closing driver..."
+				f"{CURRENT_TIME()} ⚙️ Closing WebDriver..."
 			)
 			automation.quit()
 			self.log_signal.emit(
-				f"{CURRENT_TIME()} ✅ Closed driver."
+				f"{CURRENT_TIME()} ✅ Closed WebDriver."
 			)
 		except NoSuchDriverException:
 			self.log_signal.emit(
@@ -91,12 +92,26 @@ class AutomationThread(QThread):
 			self.log_signal.emit(
 				f"{CURRENT_TIME()} ❌ WebDriver selected is invalid."
 			)
-		except ElementClickInterceptedException:
+		except InvalidUsername:
 			self.log_signal.emit(
-				f"{CURRENT_TIME()} ⚠️ Registration period hasn't started. Closing driver..."
+				f"{CURRENT_TIME()} ❌ Invalid username. Closing WebDriver..."
 			)
 			self.log_signal.emit(
-				f"{CURRENT_TIME()} ✅ Closed driver."
+				f"{CURRENT_TIME()} ✅ Closed WebDriver."
+			)
+		except InvalidPassword:
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ❌ Invalid password. Closing WebDriver..."
+			)
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Closed WebDriver."
+			)
+		except ElementClickInterceptedException:
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ⚠️ Registration period hasn't started. Closing WebDriver..."
+			)
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Closed WebDriver."
 			)
 
 
