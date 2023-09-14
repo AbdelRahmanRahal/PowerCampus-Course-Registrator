@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
 		# ------------------------------- Run button ------------------------------ #
 		self.run_button: QPushButton = QPushButton("Run")
 		self.run_button.setFixedWidth(100)
-		self.run_button.clicked.connect(self.run)
+		self.run_button.clicked.connect(self.run_automation)
 		layout.addWidget(self.run_button, alignment= Qt.AlignmentFlag.AlignHCenter)
 
 		# --------------------------------- Log area --------------------------------- #
@@ -162,7 +162,7 @@ class MainWindow(QMainWindow):
 			)
 
 
-	def run(self):
+	def run_automation(self):
 		driver_path = self.driver_path_textbox.text()
 		username = self.username_textbox.text()
 		password = self.password_textbox.text()
