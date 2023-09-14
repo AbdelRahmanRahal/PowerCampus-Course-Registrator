@@ -126,7 +126,7 @@ class AutomationThread(QThread):
 				)
 				self.log_signal.emit(
 					f"{CURRENT_TIME()} ℹ️ Trying again at "
-					f"{(datetime.now() + timedelta(minutes = 5)).strftime('%I:%M %p')}."
+					f"{(datetime.now() + timedelta(minutes = 5)).strftime('%I:%M %p')}. "
 					"Keep this window open."
 				)
 				time.sleep(300)
