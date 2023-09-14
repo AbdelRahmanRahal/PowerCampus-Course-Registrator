@@ -1,3 +1,13 @@
-from selenium import webdriver
+import sys
 
-print('Hello, mum!')
+from PySide6.QtWidgets import QApplication
+
+from gui import MainWindow
+
+
+app = QApplication(sys.argv)
+
+window = MainWindow()
+window.show()
+
+app.exec()
