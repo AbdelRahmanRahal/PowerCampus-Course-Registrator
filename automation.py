@@ -10,7 +10,7 @@ from exceptions import *
 
 class PowerCampusAutomation:
 	def __init__(self, driver_path):
-		self.driver = webdriver.Chrome(service= Service(driver_path))
+		self.driver = webdriver.Chrome(service = Service(driver_path))
 		# Initialising the waits and their durations
 		self.wait = WebDriverWait(self.driver, 30)
 		self.alert_wait = WebDriverWait(self.driver, 1)
@@ -55,7 +55,7 @@ class PowerCampusAutomation:
 		# Open the website
 		self.driver.get('https://register.nu.edu.eg/PowerCampusSelfService/Registration/Courses')
 
-		# Find the register button using the Xpath and click it
+		# Find the register button using its ID and clicking it
 		register_button = self.wait.until(EC.presence_of_element_located((By.ID, 'btnRegister')))
 		register_button.click()
 
