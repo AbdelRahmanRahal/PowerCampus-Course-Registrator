@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 	QVBoxLayout,
 	QWidget
 )
-from selenium.common.exceptions import NoSuchDriverException
+from selenium.common.exceptions import ElementClickInterceptedException, NoSuchDriverException
 
 from automation import PowerCampusAutomation
 
@@ -48,12 +48,41 @@ class AutomationThread(QThread):
 			end_time = time.time()
 			elapsed_time = end_time - start_time
 			self.log_signal.emit(
-				f"{CURRENT_TIME()} ✅ WebDriver initialised successfully. (Took {elapsed_time:.2f}s)"
+				f"{CURRENT_TIME()} ✅ WebDriver initialised successfully. [<small>{elapsed_time:.2f}s</small>]"
 			)
 
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ⚙️ Signing in..."
+			)
+			start_time = time.time()
 			automation.login(self.username, self.password)
+			end_time = time.time()
+			elapsed_time = end_time - start_time
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Signed in successfully. [<small>{elapsed_time:.2f}s</small>]"
+			)
+
+			# Giving the page time to sign in
+			time.sleep(5)
+
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ⚙️ Registering courses..."
+			)
+			start_time = time.time()
 			automation.register()
+			end_time = time.time()
+			elapsed_time = end_time - start_time
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Registered successfully. [<small>{elapsed_time:.2f}s</small>]"
+			)
+
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ⚙️ Closing driver..."
+			)
 			automation.quit()
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Closed driver."
+			)
 		except NoSuchDriverException:
 			self.log_signal.emit(
 				f"{CURRENT_TIME()} ❌ WebDriver corrupted, incompatible, unobtainable, or doesn't exist."
@@ -61,6 +90,13 @@ class AutomationThread(QThread):
 		except OSError:
 			self.log_signal.emit(
 				f"{CURRENT_TIME()} ❌ WebDriver selected is invalid."
+			)
+		except ElementClickInterceptedException:
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ⚠️ Registration period hasn't started. Closing driver..."
+			)
+			self.log_signal.emit(
+				f"{CURRENT_TIME()} ✅ Closed driver."
 			)
 
 
@@ -99,7 +135,7 @@ class MainWindow(QMainWindow):
 
 		# ---------------------- Username and password textboxes --------------------- #
 		self.login_label: QLabel = QLabel(
-			"<h4>Fill out your Nile University PowerCampus login information:</h4>"
+			"<h4>Fill out your Nile University PowerCampus sign-in information:</h4>"
 		)
 		self.login_label.setFixedHeight(15)
 
