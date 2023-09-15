@@ -1,10 +1,8 @@
 class InvalidUsername(Exception):
 	def __init__(self) -> None:
 		'''
-		Base class for staticvar exceptions.
-
-		Args:
-			message (str): error message.
+		
+		Exception class raised when the page gives an error when the user enters an invalid username.
 		'''
 		super().__init__()
 
@@ -12,9 +10,8 @@ class InvalidUsername(Exception):
 class InvalidPassword(Exception):
 	def __init__(self) -> None:
 		'''
-		Base class for staticvar exceptions.
+		
+		Exception class raised when the page gives an error when the user enters an invalid password.
 
-		Args:
-			message (str): error message.
 		'''
 		super().__init__()
