@@ -1,19 +1,40 @@
 from selenium.common.exceptions import TimeoutException
-from selenium import webdriver
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import Chrome, Firefox, Edge
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from exceptions import *
+from exceptions import InvalidPassword, InvalidUsername
 
 class PowerCampusAutomation:
+	'''
+	
+	Course registration automation script class.
 
-	def __init__(self, driver_path: str) -> None:
-		# Initialising the WebDriver.
-		self.driver: Chrome = Chrome(service = Service(driver_path))
+	'''
+	def __init__(self, driver_path: str, browser: str) -> None:
+		'''
+		
+		Course registration automation script class. 
+
+		Ags:
+			driver_path (str): the path of the WebDriver specified by the user.
+			browser (str): the user's preferred browser.
+		
+		'''
+		# Matching the driver with the browser.
+		match browser:
+			case "Chrome":
+				self.driver = Chrome(service = ChromeService(driver_path))
+			case "Firefox":
+				self.driver = Firefox(service = FirefoxService(driver_path))
+			case  "Edge":
+				# Use Edge WebDriver
+				self.driver = Edge(service = EdgeService(driver_path))
 
 		# Initialising the waits and their durations.
 		self.wait: WebDriverWait = WebDriverWait(self.driver, 30)
@@ -21,6 +42,15 @@ class PowerCampusAutomation:
 
 
 	def login(self, username: str, password: str) -> None:
+		'''
+		
+		Method responsible for logging into PowerCampus.
+
+		Args:
+			username (str): the username of the user on PowerCampus.
+			password (str): the password of the user on PowerCampus.
+		
+		'''
 		# Opening the login page.
 		self.driver.get('https://register.nu.edu.eg/PowerCampusSelfService/Home/LogIn')
 
@@ -56,6 +86,11 @@ class PowerCampusAutomation:
 
 
 	def register(self) -> None:
+		'''
+		
+		Method responsible for registering the selected courses on PowerCampus.
+
+		'''
 		# Opening the course registration page.
 		self.driver.get('https://register.nu.edu.eg/PowerCampusSelfService/Registration/Courses')
 
@@ -65,5 +100,9 @@ class PowerCampusAutomation:
 
 
 	def quit(self) -> None:
-		# Closing the driver once done.
+		'''
+		
+		Method responsible for closing the driver once done.
+
+		'''
 		self.driver.quit()

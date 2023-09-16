@@ -1,9 +1,7 @@
-import time
-from datetime import datetime, timedelta
-
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
+	QComboBox,
 	QFileDialog,
 	QHBoxLayout, 
 	QLabel,
@@ -14,150 +12,8 @@ from PySide6.QtWidgets import (
 	QVBoxLayout,
 	QWidget
 )
-from selenium.common.exceptions import ElementClickInterceptedException, NoSuchDriverException, TimeoutException
 
-from automation import PowerCampusAutomation
-from exceptions import InvalidPassword, InvalidUsername
-
-
-def CURRENT_TIME() -> str:
-	'''
-	
-	Returns:
-		str: the current time in 12-hour format in a small font.
-	
-	'''
-	return datetime.now().strftime("<small>[%I:%M %p]</small>")
-
-
-class AutomationThread(QThread):
-	'''
-	
-	Class made to execute the automation script and handle any errors that arise from it.
-
-	'''
-	log_signal: Signal = Signal(str)
-
-
-	def __init__(self, driver_path: str, username: str, password: str) -> None:
-		'''
-		
-		Class made to execute the automation script and handle any errors that arise from it.
-
-		Args:
-			driver_path (str): the path for the desired WebDriver.
-			username (str): the username of the user on PowerCampus.
-			password (str): the password of the user on PowerCampus.
-		'''
-		super().__init__()
-
-		self.driver_path: str = driver_path
-		self.username: str = username
-		self.password: str = password
-
-
-	def run(self) -> None:
-		'''
-
-		This method gets called when the thread starts (i.e. `___.start()`).
-		It's responsible for executing the automation script and keeping it in order.
-
-		'''
-		loop: bool = True
-		while loop:
-			try:
-				loop = False
-
-				# -------------------------- Initialising WebDriver -------------------------- #
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ⚙️ Initialising WebDriver..."
-				)
-				start_time: float = time.time()
-				automation: PowerCampusAutomation = PowerCampusAutomation(self.driver_path)
-				end_time: float = time.time()
-				elapsed_time: float = end_time - start_time # Calculating the time it took to initialise the WebDriver.
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ WebDriver initialised successfully. [<small>{elapsed_time:.2f}s</small>]"
-				)
-
-				# -------------------------------- Signing in -------------------------------- #
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ⚙️ Signing in..."
-				)
-				start_time: float = time.time()
-				automation.login(self.username, self.password)
-				end_time: float = time.time()
-				elapsed_time: float = end_time - start_time # Calculating the time it took to sign in.
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Signed in successfully. [<small>{elapsed_time:.2f}s</small>]"
-				)
-
-				# Giving the page time to sign in and process.
-				time.sleep(5)
-
-				# ---------------------------- Registering courses --------------------------- #
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ⚙️ Registering courses..."
-				)
-				start_time: float = time.time()
-				automation.register()
-				end_time: float = time.time()
-				elapsed_time: float = end_time - start_time # Calculating the time it took to register the courses.
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Registered successfully. [<small>{elapsed_time:.2f}s</small>]"
-				)
-
-				# ----------------------- Safely closing the WebDriver ----------------------- #
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ⚙️ Closing WebDriver..."
-				)
-				automation.quit()
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Closed WebDriver."
-				)
-			except NoSuchDriverException:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ❌ WebDriver corrupted, incompatible, unobtainable, or doesn't exist."
-				)
-			except OSError:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ❌ WebDriver selected is invalid."
-				)
-			except TimeoutException:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ❌ WebDriver unexpectedly terminated, "
-					"possibly due to a connection error or an unexpected change to the site."
-				)
-			except InvalidUsername:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ❌ Invalid username. Closing WebDriver..."
-				)
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Closed WebDriver."
-				)
-			except InvalidPassword:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ❌ Invalid password. Closing WebDriver..."
-				)
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Closed WebDriver."
-				)
-			except ElementClickInterceptedException:
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ⚠️ Registration period hasn't started. Closing WebDriver..."
-				)
-				automation.quit() # pyright: ignore[reportUnboundVariable]
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ✅ Closed WebDriver."
-				)
-				self.log_signal.emit(
-					f"{CURRENT_TIME()} ℹ️ Trying again at "
-					f"{(datetime.now() + timedelta(minutes = 5)).strftime('%I:%M %p')}. "
-					"Keep this window open."
-				)
-
-				loop = True
-				time.sleep(300) # 5 minutes
+from automationthread import AutomationThread, CURRENT_TIME
 
 
 class MainWindow(QMainWindow):
@@ -165,32 +21,48 @@ class MainWindow(QMainWindow):
 		super().__init__()
 
 		self.setWindowTitle("PowerCampus Course Registrator")
-		self.resize(720, 480)
+		self.setFixedSize(720, 480)
 		self.setWindowIcon(QIcon("icon.png"))
 
 		layout: QVBoxLayout = QVBoxLayout()
 
 		# -------------------------- WebDriver path lookup area ------------------------- #
 		self.driver_label: QLabel = QLabel(
-			"<h4>Select path for WebDriver (preferably ChromeDriver):</h4>"
+			"<h4>Select your preferred browser, and insert the path of the WebDriver corresponding to it:</h4>"
 		)
 		self.driver_label.setFixedHeight(15)
 
+		self.browser_label: QLabel = QLabel("Select preferred browser:         ")
+		self.browser_selector: QComboBox = QComboBox()
+		self.browser_selector.addItems(["Chrome", "Edge", "Firefox"])
+		self.browser_selector.currentIndexChanged.connect(self.update_driver_path)
+
+		browser_layout: QHBoxLayout = QHBoxLayout()
+		browser_layout.addWidget(self.browser_label)
+		browser_layout.addStretch(1)
+		browser_layout.addWidget(self.browser_selector)
+		browser_layout.setStretchFactor(self.browser_selector, 8)
+		browser_layout.addStretch(1)
+
+		self.driver_path_label: QLabel = QLabel("Insert path of corresponding WebDriver:")
 		self.driver_path_textbox: QLineEdit = QLineEdit()
-		self.driver_path_textbox.setText("chromedriver/chromedriver.exe")
-		self.driver_path_textbox.setPlaceholderText("ChromeDriver Path")
+		self.driver_path_textbox.setText("webdrivers/chromedriver/chromedriver.exe")
+		self.driver_path_textbox.setPlaceholderText("WebDriver path")
 		
 		self.driver_path_lookup: QPushButton = QPushButton("Find WebDriver")
 		self.driver_path_lookup.clicked.connect(self.lookup_driver)
 
 
 		driver_path_layout: QHBoxLayout = QHBoxLayout()
+		driver_path_layout.addWidget(self.driver_path_label)
 		driver_path_layout.addWidget(self.driver_path_textbox)
 		driver_path_layout.addWidget(self.driver_path_lookup)
-		driver_path_layout.setStretchFactor(self.driver_path_textbox, 3)
+		driver_path_layout.setStretchFactor(self.driver_path_textbox, 6)
+		driver_path_layout.setStretchFactor(self.driver_path_lookup, 2)
 		driver_path_layout.addStretch(1)
 
 		layout.addWidget(self.driver_label)
+		layout.addLayout(browser_layout)
 		layout.addLayout(driver_path_layout)
 
 		# ---------------------- Username and password textboxes --------------------- #
@@ -246,6 +118,24 @@ class MainWindow(QMainWindow):
 		self.setCentralWidget(container)
 	
 
+	def update_driver_path(self, index: int) -> None:
+		'''
+
+		Slot method to update the driver path textbox when the selected browser changes.
+
+		Args:
+			index (int): the index of the element in the dropdown box. Starts at 0. 
+		
+		'''
+		browser = self.browser_selector.itemText(index)
+		if browser == 'Chrome':
+			self.driver_path_textbox.setText("webdrivers/chromedriver/chromedriver.exe")
+		elif browser == 'Firefox':
+			self.driver_path_textbox.setText("webdrivers/geckodriver.exe")
+		elif browser == 'Edge':
+			self.driver_path_textbox.setText("webdrivers/msedgedriver.exe")
+	
+
 	def lookup_driver(self) -> None:
 		'''
 		
@@ -271,9 +161,10 @@ class MainWindow(QMainWindow):
 
 		'''
 		driver_path: str = self.driver_path_textbox.text()
+		browser: str = self.browser_selector.currentText()
 		username: str = self.username_textbox.text()
 		password: str = self.password_textbox.text()
 
-		self.automation_thread: AutomationThread = AutomationThread(driver_path, username, password)
+		self.automation_thread: AutomationThread = AutomationThread(driver_path, browser, username, password)
 		self.automation_thread.log_signal.connect(self.log_area.append)
 		self.automation_thread.start()
