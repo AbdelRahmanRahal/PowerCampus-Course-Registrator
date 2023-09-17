@@ -98,11 +98,23 @@ class MainWindow(QMainWindow):
 		layout.addLayout(username_layout)
 		layout.addLayout(password_layout)
 
-		# ------------------------------- Run button ------------------------------ #
+		# ------------------------------- Run button and stop button------------------------------ #
 		self.run_button: QPushButton = QPushButton("Run")
-		self.run_button.setFixedWidth(100)
+		self.run_button.setFixedWidth(150)
 		self.run_button.clicked.connect(self.run_automation)
-		layout.addWidget(self.run_button, alignment= Qt.AlignmentFlag.AlignHCenter)
+
+		self.stop_button: QPushButton = QPushButton("Stop")
+		self.stop_button.setFixedWidth(150)
+		self.stop_button.clicked.connect(self.stop_automation)
+
+
+		buttons_layout: QHBoxLayout = QHBoxLayout()
+		buttons_layout.addStretch(3)
+		buttons_layout.addWidget(self.run_button)
+		buttons_layout.addStretch(1)
+		buttons_layout.addWidget(self.stop_button)
+		buttons_layout.addStretch(3)
+		layout.addLayout(buttons_layout)
 
 		# --------------------------------- Log area --------------------------------- #
 		self.log_area: QTextEdit = QTextEdit()
@@ -160,11 +172,50 @@ class MainWindow(QMainWindow):
 		It takes all the info the user entered and sends it to the `AutomationThread`.
 
 		'''
+		# Disabling the run button until the thread is done.
+		self.run_button.setEnabled(False)
+
 		driver_path: str = self.driver_path_textbox.text()
 		browser: str = self.browser_selector.currentText()
 		username: str = self.username_textbox.text()
 		password: str = self.password_textbox.text()
 
 		self.automation_thread: AutomationThread = AutomationThread(driver_path, browser, username, password)
+		self.automation_thread.button_state_signal.connect(self.enable_run_button)
 		self.automation_thread.log_signal.connect(self.log_area.append)
 		self.automation_thread.start()
+
+	
+	def stop_automation(self) -> None:
+		'''
+		
+		The method that gets called when the user presses the "Stop" button.
+		It terminates the automation thread abruptly.
+		
+		'''
+		try:
+			if self.automation_thread.isRunning():
+				self.automation_thread.terminate()
+				self.run_button.setEnabled(True)
+				self.log_area.append(
+					f"{CURRENT_TIME()} ℹ️ Terminated the program early. "
+					f"Be sure to close any browser windows opened by the program, if there were any."
+				)
+			else:
+				self.log_area.append(
+					f"{CURRENT_TIME()} ℹ️ The program is already not running."
+				)
+		except AttributeError:
+			# For when the user clicks the "Stop" button before they ever initialise an automation thread.
+			self.log_area.append(
+					f"{CURRENT_TIME()} ℹ️ The program is already not running."
+				)
+	
+
+	def enable_run_button(self) -> None:
+		'''
+		
+		Slot method called when the automation thread finishes to enable the run button again.
+
+		'''
+		self.run_button.setEnabled(True)

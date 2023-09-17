@@ -29,6 +29,7 @@ class AutomationThread(QThread):
 	Class made to execute the automation script and handle any errors that arise from it.
 
 	'''
+	button_state_signal: Signal = Signal()
 	log_signal: Signal = Signal(str)
 
 
@@ -157,3 +158,6 @@ class AutomationThread(QThread):
 
 				loop = True
 				time.sleep(300) # 5 minutes
+			finally:
+				# Re-enabling the run button.
+				self.button_state_signal.emit()
