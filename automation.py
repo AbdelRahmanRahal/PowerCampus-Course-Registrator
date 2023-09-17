@@ -1,3 +1,12 @@
+'''
+
+Copyright (c) 2023, AbdelRahman Rahal
+All rights reserved.
+
+This source code is licensed under the BSD-style license found in the
+LICENSE file in the same directory as this file.
+
+'''
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, Firefox, Edge
 from selenium.webdriver.chrome.service import Service as ChromeService

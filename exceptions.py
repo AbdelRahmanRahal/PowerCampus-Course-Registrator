@@ -1,3 +1,12 @@
+'''
+
+Copyright (c) 2023, AbdelRahman Rahal
+All rights reserved.
+
+This source code is licensed under the BSD-style license found in the
+LICENSE file in the same directory as this file.
+
+'''
 class InvalidUsername(Exception):
 	def __init__(self) -> None:
 		'''

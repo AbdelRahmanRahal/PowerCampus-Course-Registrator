@@ -1,3 +1,12 @@
+'''
+
+Copyright (c) 2023, AbdelRahman Rahal
+All rights reserved.
+
+This source code is licensed under the BSD-style license found in the
+LICENSE file in the same directory as this file.
+
+'''
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
